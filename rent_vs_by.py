@@ -17,22 +17,22 @@ initiation_fee = 50000
 bond_interest_rate = 0.105
 bond_duration_in_years = 20
 
-property_annual_appreciation = 0.02
+property_annual_appreciation = 0.03
 
 purchase_costs = {
-    "tax": 100,
-    "levies": 1500,
-    "utilities": 1000,
-    "maintenance": 500,
-    "wages": 1500
+    "tax": -100,
+    "levies": -1500,
+    "utilities": -1000,
+    "maintenance": -500,
+    "wages": -1500
 }
 
 # property rental
 
 rental_costs = {
-    "rent": 9000,
-    "utilities": 1000,
-    "wages": 2700
+    "rent": -9000,
+    "utilities": -1000,
+    "wages": -2700
 }
 
 def total_paid_for_monthly_cost(monthly_cost, annual_inflation=inflation_rate):
@@ -58,11 +58,11 @@ property_final_value = -np.fv(rate=property_annual_appreciation, nper=bond_durat
 
 bond_monthly_payment = np.pmt(bond_interest_rate / 12, bond_duration_in_years * 12, total_loan_amount)
 purchase_other_monthly_costs = reduce(operator.add, [x for x in purchase_costs.values()])
-purchase_total_monthly_costs = bond_monthly_payment - purchase_other_monthly_costs
+purchase_total_monthly_costs = bond_monthly_payment + purchase_other_monthly_costs
 
 purchase_initial_monthly_investment_amount = allocated_monthly_funds \
     + bond_monthly_payment \
-    - purchase_other_monthly_costs
+    + purchase_other_monthly_costs
 purchase_investment_final_value = -np.fv(rate=investment_rate/12, nper=bond_duration_in_years*12, pmt=purchase_initial_monthly_investment_amount, pv=0)
 
 purchase_nett_assets = round(purchase_investment_final_value + property_final_value, 2)
@@ -82,7 +82,7 @@ Nett assets: {purchase_nett_assets:,}
 
 print("==== Property rental ===")
 
-rent_initial_monthly_investment_amount = allocated_monthly_funds - reduce(operator.add, [x for x in rental_costs.values()])
+rent_initial_monthly_investment_amount = allocated_monthly_funds + reduce(operator.add, [x for x in rental_costs.values()])
 rent_investment_final_value = -np.fv(rate=investment_rate/12, nper=bond_duration_in_years*12, pmt=rent_initial_monthly_investment_amount, pv=0)
 
 rent_net_assets = rent_investment_final_value
@@ -100,18 +100,18 @@ Final value of investment: {round(rent_investment_final_value):,}
 
 d = {
     "purchase": [
-        f"{round(purchase_total_monthly_costs):,}",
-        f"{round(purchase_initial_monthly_investment_amount):,}",
-        f"{round(property_final_value):,}",
-        f"{round(purchase_investment_final_value):,}",
-        f"{round(purchase_nett_assets):,}",
+        f"{round(purchase_total_monthly_costs, 2):,}",
+        f"{round(purchase_initial_monthly_investment_amount, 2):,}",
+        f"{round(property_final_value, 2):,}",
+        f"{round(purchase_investment_final_value, 2):,}",
+        f"{round(purchase_nett_assets, 2):,}",
     ],
     "rent": [
-        f"{round(-rent_total_monthly_costs):,}",
-        f"{round(rent_initial_monthly_investment_amount):,}",
+        f"{round(rent_total_monthly_costs, 2):,}",
+        f"{round(rent_initial_monthly_investment_amount, 2):,}",
         f"N/A",
-        f"{round(rent_investment_final_value):,}",
-        f"{round(rent_investment_final_value):,}",
+        f"{round(rent_investment_final_value, 2):,}",
+        f"{round(rent_investment_final_value, 2):,}",
     ]
 }
 
