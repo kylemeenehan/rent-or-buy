@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import operator
 from functools import reduce
+import helpers
 
 # global constants
 
@@ -11,8 +12,11 @@ investment_rate = 0.09
 
 # property purchase
 
-property_price = 1400000
-initiation_fee = 50000
+property_price = 1000000
+transfer_duty = helpers.transfer_duty(property_price)
+monthly_property_taxes = helpers.monthly_property_taxes(property_price)
+print(f"monthly_property_taxes: {monthly_property_taxes}")
+legal_fees = 50000
 
 bond_interest_rate = 0.105
 bond_duration_in_years = 20
@@ -20,7 +24,7 @@ bond_duration_in_years = 20
 property_annual_appreciation = 0.03
 
 purchase_costs = {
-    "tax": -100,
+    "tax": monthly_property_taxes,
     "levies": -1500,
     "utilities": -1000,
     "maintenance": -500,
@@ -35,25 +39,12 @@ rental_costs = {
     "wages": -2700
 }
 
-def total_paid_for_monthly_cost(monthly_cost, annual_inflation=inflation_rate):
-    amount = np.fv(rate=annual_inflation, nper=bond_duration_in_years, pmt=monthly_cost*12, pv=0)
-    return round(amount, 2)
-
-def cost_of_scenario(cost_dict):
-    total_cost = 0;
-
-    for cost_type, amount in cost_dict.items():
-        total_cost_for_type = total_paid_for_monthly_cost(amount)
-        total_cost = total_cost + total_cost_for_type
-        print(f"Total cost of {cost_type}: {round(total_cost_for_type, 2)}")
-    return total_cost
-
 
 # results
 
 print("==== Property purchase ===")
 
-total_loan_amount = property_price + initiation_fee
+total_loan_amount = property_price + transfer_duty + legal_fees
 property_final_value = -np.fv(rate=property_annual_appreciation, nper=bond_duration_in_years, pmt=0, pv=property_price)
 
 bond_monthly_payment = np.pmt(bond_interest_rate / 12, bond_duration_in_years * 12, total_loan_amount)
@@ -68,13 +59,15 @@ purchase_investment_final_value = -np.fv(rate=investment_rate/12, nper=bond_dura
 purchase_nett_assets = round(purchase_investment_final_value + property_final_value, 2)
 
 print(f"""
+Property price: {property_price:,}
+Transfer duty: {round(transfer_duty, 2):,}
 Total loan amount: {total_loan_amount:,}
 Monthly bond payment: {round(bond_monthly_payment, 2):,}
 Monthly other costs: {purchase_other_monthly_costs:,}
 Total monthly: {round(purchase_total_monthly_costs, 2):,}
 Property value once paid off: {round(property_final_value, 2):,}
 Monthly investment amount: {round(purchase_initial_monthly_investment_amount, 2):,}
-Final value of investment: {round(purchase_investment_final_value, 2)}
+Final value of investment: {round(purchase_investment_final_value, 2):,}
 
 Nett assets: {purchase_nett_assets:,}
 """)
@@ -87,7 +80,7 @@ rent_investment_final_value = -np.fv(rate=investment_rate/12, nper=bond_duration
 
 rent_net_assets = rent_investment_final_value
 rent_total_monthly_costs = reduce(operator.add, [x for x in rental_costs.values()])
-total_rent_costs = cost_of_scenario(rental_costs);
+total_rent_costs = helpers.cost_of_scenario(rental_costs, inflation_rate, bond_duration_in_years);
 
 print(f"""
 Initial monthly rent: {rental_costs['rent']:,}
@@ -116,7 +109,7 @@ d = {
 }
 
 results = pd.DataFrame(d, index=["Initial monthly payments",
-                       "Initial monthly investement",
+                       "Initial monthly investment",
                        "Property final value",
                        "Investment final value",
                        "Final nett assets"])
